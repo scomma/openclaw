@@ -41,6 +41,28 @@ export type TelegramCustomCommand = {
   description: string;
 };
 
+/**
+ * Telegram Business Mode configuration.
+ * Grants the agent read access to the operator's personal Telegram chats
+ * via Telegram's Business API. This is a data-source integration, not a
+ * real-time channel — messages are passively stored and queried on demand.
+ */
+export type TelegramBusinessConfig = {
+  /** Enable business mode message ingestion. Default: false. */
+  enabled?: boolean;
+  /**
+   * Storage directory for business messages.
+   * Default: {stateDir}/telegram-business/{accountId}
+   */
+  storageDir?: string;
+  /** Maximum messages to retain per chat (0 = unlimited). Default: 10000. */
+  maxMessagesPerChat?: number;
+  /** Maximum age in days for stored messages (0 = unlimited). Default: 90. */
+  maxAgeDays?: number;
+  /** If true, expose the telegram_business agent tool. Default: true when business.enabled. */
+  tool?: boolean;
+};
+
 export type TelegramAccountConfig = {
   /** Optional display name for this account (used in CLI/UI lists). */
   name?: string;
@@ -140,6 +162,8 @@ export type TelegramAccountConfig = {
    * Use `"auto"` to derive `[{identity.name}]` from the routed agent.
    */
   responsePrefix?: string;
+  /** Telegram Business Mode configuration (personal chat access). */
+  business?: TelegramBusinessConfig;
 };
 
 export type TelegramTopicConfig = {

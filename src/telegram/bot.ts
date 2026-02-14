@@ -44,6 +44,7 @@ import {
   resolveTelegramForumThreadId,
   resolveTelegramStreamMode,
 } from "./bot/helpers.js";
+import { registerTelegramBusinessHandlers } from "./business/handlers.js";
 import { resolveTelegramFetch } from "./fetch.js";
 import { wasSentByBot } from "./sent-message-cache.js";
 
@@ -77,8 +78,26 @@ export function getTelegramSequentialKey(ctx: {
     edited_message?: Message;
     callback_query?: { message?: Message };
     message_reaction?: { chat?: { id?: number } };
+    business_connection?: { id?: string };
+    business_message?: { chat?: { id?: number } };
+    edited_business_message?: { chat?: { id?: number } };
+    deleted_business_messages?: { chat?: { id?: number } };
   };
 }): string {
+  // Handle business mode updates — separate concurrency scope.
+  const bizConn = ctx.update?.business_connection;
+  if (bizConn?.id) {
+    return `telegram:business:connection:${bizConn.id}`;
+  }
+  const bizMsg = ctx.update?.business_message ?? ctx.update?.edited_business_message;
+  if (bizMsg?.chat?.id) {
+    return `telegram:business:${bizMsg.chat.id}`;
+  }
+  const deletedBiz = ctx.update?.deleted_business_messages;
+  if (deletedBiz?.chat?.id) {
+    return `telegram:business:${deletedBiz.chat.id}`;
+  }
+
   // Handle reaction updates
   const reaction = ctx.update?.message_reaction;
   if (reaction?.chat?.id) {
@@ -492,6 +511,15 @@ export function createTelegramBot(opts: TelegramBotOptions) {
     shouldSkipUpdate,
     processMessage,
     logger,
+  });
+
+  // Register business mode handlers (passive ingestion — does not wake agent).
+  registerTelegramBusinessHandlers({
+    bot,
+    cfg,
+    accountId: account.accountId,
+    runtime,
+    shouldSkipUpdate,
   });
 
   return bot;

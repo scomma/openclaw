@@ -142,6 +142,16 @@ export const TelegramAccountSchemaBase = z
     heartbeat: ChannelHeartbeatVisibilitySchema,
     linkPreview: z.boolean().optional(),
     responsePrefix: z.string().optional(),
+    business: z
+      .object({
+        enabled: z.boolean().optional(),
+        storageDir: z.string().optional(),
+        maxMessagesPerChat: z.number().int().min(0).optional(),
+        maxAgeDays: z.number().int().min(0).optional(),
+        tool: z.boolean().optional(),
+      })
+      .strict()
+      .optional(),
   })
   .strict();
 
